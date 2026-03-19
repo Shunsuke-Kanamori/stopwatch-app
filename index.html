@@ -1,542 +1,173 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#f5f7fb" />
-  <title>Multi Stopwatch</title>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #18212f;
-      --muted: #667085;
-      --line: #d9e0ea;
-      --accent: #1f6feb;
-      --accent-pressed: #1858ba;
-      --secondary: #eef3fb;
-      --running: #dff4e8;
-      --stopped: #edf1f7;
-      --danger: #fff1f1;
-      --shadow: 0 6px 20px rgba(21, 34, 50, 0.08);
-      --radius: 18px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi Stopwatch</title>
 
-    * { box-sizing: border-box; }
+<style>
+body {
+  font-family: -apple-system;
+  background:#f5f7fb;
+  margin:0;
+  padding:10px;
+}
 
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-    }
+.card {
+  background:#fff;
+  margin:10px 0;
+  padding:10px;
+  border-radius:12px;
+  transition: all 0.2s ease;
+}
 
-    .app {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: max(16px, env(safe-area-inset-top)) 14px max(20px, env(safe-area-inset-bottom)) 14px;
-    }
+/* 🔥 視認性最強ハイライト */
+.card.running {
+  background: #16a34a;
+  border: 3px solid #065f46;
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.4), 0 12px 32px rgba(0,0,0,0.25);
+  transform: scale(1.02);
+}
 
-    .header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
+.time {
+  font-size:24px;
+  text-align:center;
+}
 
-    .title {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin: 0;
-    }
+/* 🔥 時間表示強調 */
+.card.running .time {
+  background: #022c22;
+  color: #ecfdf5;
+  font-weight: 900;
+  padding:6px;
+  border-radius:8px;
+}
 
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
+/* 🔥 赤バッジ */
+.status {
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:8px;
+  display:inline-block;
+  margin-bottom:5px;
+  background:#ddd;
+}
 
-    .topbar,
-    .search-card,
-    .help-card,
-    .timer-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
+.card.running .status {
+  background:#ef4444;
+  color:white;
+}
 
-    .topbar {
-      padding: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
+/* 入力 */
+input {
+  width:100%;
+  margin:5px 0;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
 
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+.card.running input {
+  border:2px solid #022c22;
+}
 
-    .badge {
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      background: var(--secondary);
-      color: var(--text);
-      border: 1px solid var(--line);
-    }
+/* ボタン */
+button {
+  padding:10px;
+  margin:2px;
+  border-radius:8px;
+  border:none;
+  background:#eee;
+}
 
-    .search-card,
-    .help-card {
-      padding: 12px;
-      margin-bottom: 12px;
-    }
-
-    .search-input {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 16px;
-      background: #fff;
-      color: var(--text);
-    }
-
-    .search-input:focus,
-    .name-input:focus {
-      outline: 2px solid rgba(31, 111, 235, 0.18);
-      border-color: var(--accent);
-    }
-
-    .help-card details summary {
-      cursor: pointer;
-      font-weight: 700;
-      user-select: none;
-    }
-
-    .help-card details p {
-      color: var(--muted);
-      line-height: 1.6;
-      margin: 10px 0 0;
-      font-size: 14px;
-    }
-
-    .timer-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .timer-card {
-      padding: 12px;
-    }
-
-    .timer-card.running {
-      background: #e6ffed; /* stronger green */
-      border: 2px solid #22c55e; /* vivid green border */
-      box-shadow: 0 10px 28px rgba(34, 197, 94, 0.25);
-    }
-
-    .timer-card.running .time-box {
-      background: #bbf7d0; /* brighter */
-      color: #065f46; /* dark green text */
-      font-weight: 900;
-    }
-
-    .timer-card.running .status {
-      background: #22c55e;
-      color: #fff;
-      border-color: #16a34a;
-    }
-
-    .timer-card.running .name-input {
-      border-color: #22c55e;
-      box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
-    }
-
-    .timer-card.running .time-box {
-      background: #e3f5e8;
-    }
-
-    .timer-card.running .name-input {
-      border-color: #9fd5ae;
-    }
-
-    .timer-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .timer-number {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-    }
-
-    .status {
-      font-size: 12px;
-      font-weight: 800;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      white-space: nowrap;
-    }
-
-    .status.running {
-      background: var(--running);
-    }
-
-    .status.stopped {
-      background: var(--stopped);
-    }
-
-    .name-input {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 13px 14px;
-      font-size: 16px;
-      margin-bottom: 10px;
-      background: #fff;
-    }
-
-    .time-box {
-      font-variant-numeric: tabular-nums;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: clamp(28px, 8vw, 42px);
-      font-weight: 800;
-      text-align: center;
-      padding: 18px 10px;
-      background: #f1f5fa;
-      border-radius: 16px;
-      margin-bottom: 10px;
-      letter-spacing: -0.03em;
-    }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-
-    button {
-      appearance: none;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px 10px;
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--text);
-      background: #fff;
-      min-height: 48px;
-    }
-
-    button.primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    button.primary:active {
-      background: var(--accent-pressed);
-    }
-
-    button.secondary {
-      background: var(--secondary);
-    }
-
-    button.danger {
-      background: var(--danger);
-    }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 24px 12px;
-      font-size: 15px;
-    }
-
-    @media (min-width: 768px) {
-      .timer-list {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-  </style>
+button:active {
+  transform: scale(0.95);
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <header class="header">
-      <h1 class="title">Multi Stopwatch</h1>
-      <p class="subtitle">50個の独立ストップウォッチ。順番は固定で、Stopしても位置は変わりません。</p>
-    </header>
 
-    <section class="topbar">
-      <div class="badges">
-        <div class="badge" id="runningCount">動作中: 0</div>
-        <div class="badge">合計: 50</div>
-      </div>
-      <button class="danger" id="resetAllBtn">Reset All</button>
-    </section>
+<h2>Multi Stopwatch</h2>
+<div id="app"></div>
 
-    <section class="search-card">
-      <input id="searchInput" class="search-input" type="text" placeholder="名前または番号で検索" />
-    </section>
+<script>
+const COUNT = 50;
 
-    <section class="help-card">
-      <details>
-        <summary>iPhoneで使う簡単メモ</summary>
-        <p>
-          このHTMLファイルをSafariで開けば使えます。共有メニューから「ホーム画面に追加」を選ぶと、アプリっぽく起動できます。データは同じブラウザ内に保存されます。
-        </p>
-      </details>
-    </section>
+let timers = JSON.parse(localStorage.getItem("timers")||"null") ||
+Array.from({length:COUNT},(_,i)=>({id:i,name:"Timer "+(i+1),t:0,r:false,s:0}));
 
-    <main id="timerList" class="timer-list"></main>
-  </div>
+function save(){
+  localStorage.setItem("timers",JSON.stringify(timers));
+}
 
-  <script>
-    const COUNT = 50;
-    const STORAGE_KEY = 'multi-stopwatch-html-v1';
-    const timerListEl = document.getElementById('timerList');
-    const runningCountEl = document.getElementById('runningCount');
-    const searchInputEl = document.getElementById('searchInput');
-    const resetAllBtnEl = document.getElementById('resetAllBtn');
+function now(){
+  return Date.now();
+}
 
-    function makeInitialTimers() {
-      return Array.from({ length: COUNT }, (_, i) => ({
-        id: i + 1,
-        name: `Timer ${i + 1}`,
-        elapsedMs: 0,
-        running: false,
-        startedAt: null,
-      }));
-    }
+function elapsed(t){
+  return t.r ? t.t + (now()-t.s) : t.t;
+}
 
-    function loadTimers() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return makeInitialTimers();
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed) || parsed.length !== COUNT) return makeInitialTimers();
-        return parsed.map((t, i) => ({
-          id: i + 1,
-          name: typeof t.name === 'string' ? t.name : `Timer ${i + 1}`,
-          elapsedMs: Number.isFinite(t.elapsedMs) ? t.elapsedMs : 0,
-          running: !!t.running,
-          startedAt: Number.isFinite(t.startedAt) ? t.startedAt : null,
-        }));
-      } catch {
-        return makeInitialTimers();
-      }
-    }
+function fmt(ms){
+  let cs=Math.floor(ms/10)%100;
+  let s=Math.floor(ms/1000)%60;
+  let m=Math.floor(ms/60000)%60;
+  let h=Math.floor(ms/3600000);
+  return `${h}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}.${cs}`;
+}
 
-    let timers = loadTimers();
-    let now = Date.now();
-    let searchQuery = '';
-    let ticker = null;
+function render(){
+  document.getElementById("app").innerHTML =
+  timers.map(t=>`
+    <div class="card ${t.r ? 'running' : ''}">
+      <div class="status">${t.r ? 'RUNNING' : 'STOPPED'}</div>
+      <div>#${t.id+1}</div>
 
-    function saveTimers() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
-    }
+      <input value="${t.name}"
+        onchange="rename(${t.id},this.value)">
 
-    function formatTime(ms) {
-      const totalCentiseconds = Math.floor(ms / 10);
-      const cs = totalCentiseconds % 100;
-      const totalSeconds = Math.floor(totalCentiseconds / 100);
-      const seconds = totalSeconds % 60;
-      const totalMinutes = Math.floor(totalSeconds / 60);
-      const minutes = totalMinutes % 60;
-      const hours = Math.floor(totalMinutes / 60);
-      const pad = (n) => String(n).padStart(2, '0');
-      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(cs)}`;
-    }
+      <div class="time">${fmt(elapsed(t))}</div>
 
-    function currentElapsed(timer) {
-      if (!timer.running || !timer.startedAt) return timer.elapsedMs;
-      return timer.elapsedMs + (now - timer.startedAt);
-    }
+      <button onclick="start(${t.id})">Start</button>
+      <button onclick="stop(${t.id})">Stop</button>
+      <button onclick="reset(${t.id})">Reset</button>
+    </div>
+  `).join("");
+}
 
-    function startTimer(id) {
-      const startAt = Date.now();
-      timers = timers.map((t) => (
-        t.id === id && !t.running ? { ...t, running: true, startedAt: startAt } : t
-      ));
-      saveTimers();
-      ensureTicker();
-      render();
-    }
+function start(i){
+  let t=timers[i];
+  if(!t.r){
+    t.r=true;
+    t.s=now();
+    save();
+  }
+}
 
-    function stopTimer(id) {
-      const stopAt = Date.now();
-      timers = timers.map((t) => {
-        if (t.id !== id || !t.running || !t.startedAt) return t;
-        return {
-          ...t,
-          running: false,
-          elapsedMs: t.elapsedMs + (stopAt - t.startedAt),
-          startedAt: null,
-        };
-      });
-      saveTimers();
-      ensureTicker();
-      render();
-    }
+function stop(i){
+  let t=timers[i];
+  if(t.r){
+    t.t+=now()-t.s;
+    t.r=false;
+    save();
+  }
+}
 
-    function resetTimer(id) {
-      timers = timers.map((t) => (
-        t.id === id ? { ...t, elapsedMs: 0, running: false, startedAt: null } : t
-      ));
-      saveTimers();
-      ensureTicker();
-      render();
-    }
+function reset(i){
+  timers[i]={...timers[i],t:0,r:false};
+  save();
+  render();
+}
 
-    function resetAll() {
-      timers = timers.map((t) => ({ ...t, elapsedMs: 0, running: false, startedAt: null }));
-      saveTimers();
-      ensureTicker();
-      render();
-    }
+function rename(i,v){
+  timers[i].name=v;
+  save();
+}
 
-    function renameTimer(id, value) {
-      timers = timers.map((t) => (t.id === id ? { ...t, name: value } : t));
-      saveTimers();
-    }
+setInterval(render,100);
+render();
+</script>
 
-    function setDefaultName(id) {
-      timers = timers.map((t) => (t.id === id ? { ...t, name: `Timer ${id}` } : t));
-      saveTimers();
-      render();
-    }
-
-    function filteredTimers() {
-      const q = searchQuery.trim().toLowerCase();
-      if (!q) return timers;
-      return timers.filter((t) => t.name.toLowerCase().includes(q) || String(t.id).includes(q));
-    }
-
-    function runningCount() {
-      return timers.filter((t) => t.running).length;
-    }
-
-    function ensureTicker() {
-      const anyRunning = timers.some((t) => t.running);
-      if (anyRunning && !ticker) {
-        ticker = setInterval(() => {
-          now = Date.now();
-          updateVisibleTimes();
-          updateRunningCount();
-        }, 50);
-      }
-      if (!anyRunning && ticker) {
-        clearInterval(ticker);
-        ticker = null;
-      }
-    }
-
-    function updateRunningCount() {
-      runningCountEl.textContent = `動作中: ${runningCount()}`;
-    }
-
-    function updateVisibleTimes() {
-      document.querySelectorAll('[data-time-id]').forEach((el) => {
-        const id = Number(el.dataset.timeId);
-        const timer = timers.find((t) => t.id === id);
-        if (!timer) return;
-        el.textContent = formatTime(currentElapsed(timer));
-      });
-    }
-
-    function render() {
-      now = Date.now();
-      updateRunningCount();
-
-      const items = filteredTimers();
-      if (items.length === 0) {
-        timerListEl.innerHTML = '<div class="empty">該当するタイマーがありません。</div>';
-        return;
-      }
-
-      timerListEl.innerHTML = items.map((timer) => `
-        <section class="timer-card ${timer.running ? 'running' : ''}">
-          <div class="timer-head">
-            <div class="timer-number">#${timer.id}</div>
-            <div class="status ${timer.running ? 'running' : 'stopped'}">${timer.running ? 'Running' : 'Stopped'}</div>
-          </div>
-          <input class="name-input" data-name-id="${timer.id}" value="${escapeHtml(timer.name)}" />
-          <div class="time-box" data-time-id="${timer.id}">${formatTime(currentElapsed(timer))}</div>
-          <div class="buttons">
-            ${timer.running
-              ? `<button class="primary" data-action="stop" data-id="${timer.id}">Stop</button>`
-              : `<button class="primary" data-action="start" data-id="${timer.id}">Start</button>`}
-            <button class="secondary" data-action="reset" data-id="${timer.id}">Reset</button>
-            <button data-action="default" data-id="${timer.id}">Default</button>
-          </div>
-        </section>
-      `).join('');
-    }
-
-    function escapeHtml(text) {
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    timerListEl.addEventListener('click', (e) => {
-      const button = e.target.closest('button[data-action]');
-      if (!button) return;
-      const id = Number(button.dataset.id);
-      const action = button.dataset.action;
-      if (action === 'start') startTimer(id);
-      if (action === 'stop') stopTimer(id);
-      if (action === 'reset') resetTimer(id);
-      if (action === 'default') setDefaultName(id);
-    });
-
-    timerListEl.addEventListener('input', (e) => {
-      const input = e.target.closest('input[data-name-id]');
-      if (!input) return;
-      renameTimer(Number(input.dataset.nameId), input.value);
-    });
-
-    searchInputEl.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      render();
-    });
-
-    resetAllBtnEl.addEventListener('click', () => {
-      if (confirm('50個のタイマーをすべてリセットしますか？')) resetAll();
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      now = Date.now();
-      render();
-    });
-
-    window.addEventListener('pageshow', () => {
-      now = Date.now();
-      render();
-      ensureTicker();
-    });
-
-    render();
-    ensureTicker();
-  </script>
 </body>
 </html>

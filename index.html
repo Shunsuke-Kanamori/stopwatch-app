@@ -141,9 +141,26 @@
     }
 
     .timer-card.running {
-      background: #eef9f1;
-      border-color: #9fd5ae;
-      box-shadow: 0 8px 24px rgba(46, 125, 50, 0.12);
+      background: #e6ffed; /* stronger green */
+      border: 2px solid #22c55e; /* vivid green border */
+      box-shadow: 0 10px 28px rgba(34, 197, 94, 0.25);
+    }
+
+    .timer-card.running .time-box {
+      background: #bbf7d0; /* brighter */
+      color: #065f46; /* dark green text */
+      font-weight: 900;
+    }
+
+    .timer-card.running .status {
+      background: #22c55e;
+      color: #fff;
+      border-color: #16a34a;
+    }
+
+    .timer-card.running .name-input {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
     }
 
     .timer-card.running .time-box {

@@ -140,6 +140,20 @@
       padding: 12px;
     }
 
+    .timer-card.running {
+      background: #eef9f1;
+      border-color: #9fd5ae;
+      box-shadow: 0 8px 24px rgba(46, 125, 50, 0.12);
+    }
+
+    .timer-card.running .time-box {
+      background: #e3f5e8;
+    }
+
+    .timer-card.running .name-input {
+      border-color: #9fd5ae;
+    }
+
     .timer-head {
       display: flex;
       align-items: center;
@@ -440,7 +454,7 @@
       }
 
       timerListEl.innerHTML = items.map((timer) => `
-        <section class="timer-card">
+        <section class="timer-card ${timer.running ? 'running' : ''}">
           <div class="timer-head">
             <div class="timer-number">#${timer.id}</div>
             <div class="status ${timer.running ? 'running' : 'stopped'}">${timer.running ? 'Running' : 'Stopped'}</div>
